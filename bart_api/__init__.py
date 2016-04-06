@@ -40,7 +40,7 @@ class BartApi():
     return station_list
 
   def bsa(self, stn="ALL"):
-    xml = self.get_xml("http://api.bart.gov/api/stn.aspx?cmd=stninfo&orig=%s&key=%s" % (stn,self.api_key))
+    xml = self.get_xml("http://api.bart.gov/api/bsa.aspx?cmd=bsa&orig=%s&key=%s" % (stn,self.api_key))
     return xml.find(".//description").text
 
   def station_info(self, station):
@@ -50,7 +50,8 @@ class BartApi():
 
   def station_access(self, station, legend="1"):
     xml = self.get_xml("http://api.bart.gov/api/stn.aspx?cmd=stnaccess&orig=%s&key=%s&l=%s" % (station,self.api_key,legend))
-    return dict(((elt.tag,elt.text) for elt in xml))
+    raw_station = xml.find(".//station")
+    return dict(((elt.tag,elt.text) for elt in raw_station))
 
   def etd(self, station="ALL", platform=None, direction=None):
     if station == "ALL":
@@ -111,7 +112,7 @@ class BartApi():
       return list_of_items
 
   def get_holidays(self):
-    xml = self.get_xml("http://api.bart.gov/api/route.aspx?cmd=holiday&key=%s" % (self.api_key))
+    xml = self.get_xml("http://api.bart.gov/api/sched.aspx?cmd=holiday&key=%s" % (self.api_key))
     raw_holidays = xml.findall(".//holiday")
     holiday_list = []
     for holiday in raw_holidays:
@@ -120,7 +121,7 @@ class BartApi():
 
 
   def get_schedules(self):
-    xml = self.get_xml("http://api.bart.gov/api/route.aspx?cmd=scheds&key=%s" % (self.api_key))
+    xml = self.get_xml("http://api.bart.gov/api/sched.aspx?cmd=scheds&key=%s" % (self.api_key))
     raw_schedules = xml.findall(".//schedule")
     schedules = []
     for schedule in raw_schedules:
@@ -130,13 +131,13 @@ class BartApi():
     return schedules
 
   def get_special_schedules(self, legend="1"):
-    xml = self.get_xml("http://api.bart.gov/api/stn.aspx?cmd=special&key=%s&l=%s" % (self.api_key,legend))
+    xml = self.get_xml("http://api.bart.gov/api/sched.aspx?cmd=special&key=%s&l=%s" % (self.api_key,legend))
     schedule_xml = xml.find('.//special_schedule')
     xml_dict = dict(((elt.tag,elt.text) for elt in schedule_xml))
     return xml_dict
   
   def get_station_schedule(self, station):
-    xml = self.get_xml("http://api.bart.gov/api/stn.aspx?cmd=stnsched&orig=%s&key=%s" % (station,self.api_key))
+    xml = self.get_xml("http://api.bart.gov/api/sched.aspx?cmd=stnsched&orig=%s&key=%s" % (station,self.api_key))
     raw_schedules = xml.findall('.//item')
     schedule_list = []
     for item in raw_schedules:
@@ -144,11 +145,11 @@ class BartApi():
         schedule_list.append(schedule_dict)
     return schedule_list
 
-  def get_route_schedule(self, sched='', date='today', legend="1"):
+  def get_route_schedule(self, route, sched='', date='today', legend="1"):
     if not sched=='':
-      xml = self.get_xml("http://api.bart.gov/api/stn.aspx?cmd=special&sched=%s&key=%s&l=%s" % (sched,self.api_key,legend))
+      xml = self.get_xml("http://api.bart.gov/api/sched.aspx?cmd=routesched&route=%s&sched=%s&key=%s&l=%s" % (route,sched,self.api_key,legend))
     elif sched == '':
-      xml = self.get_xml("http://api.bart.gov/api/stn.aspx?cmd=special&date=%s&key=%s&l=%s" % (date,self.api_key,legend))
+      xml = self.get_xml("http://api.bart.gov/api/sched.aspx?cmd=routesched&route=%s&date=%s&key=%s&l=%s" % (route,date,self.api_key,legend))
     raw_routes = xml.findall(".//train")
     trains = {}
     for train in raw_routes:
@@ -161,7 +162,7 @@ class BartApi():
     return trains
 
   def get_fare(self, orig, dest):
-    xml = self.get_xml("http://api.bart.gov/api/stn.aspx?cmd=fare&orig=%s&dest=%s&key=%s" % (orig,dest,self.api_key))
+    xml = self.get_xml("http://api.bart.gov/api/sched.aspx?cmd=fare&orig=%s&dest=%s&key=%s" % (orig,dest,self.api_key))
     raw_fare = xml.find(".//trip")
     fare_dict = { "fare" : raw_fare.find("fare").text, "clipper_fare" : raw_fare.find(".//clipper").text }
     return fare_dict
